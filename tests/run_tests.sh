@@ -47,3 +47,13 @@ EOF
 
 grep -q "review: tcp listener on 0.0.0.0:8080" "$tmp_output"
 grep -q "review: tcp listener on \\[::\\]:8443" "$tmp_output"
+
+tmp_input="$(mktemp)"
+trap 'rm -f "$tmp_output" "$tmp_input"' EXIT
+cat >"$tmp_input" <<'EOF'
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      128    127.0.0.1:5432 0.0.0.0:*
+EOF
+
+./socket-state-triage "$tmp_input" >"$tmp_output"
+grep -q "listening sockets: 1" "$tmp_output"

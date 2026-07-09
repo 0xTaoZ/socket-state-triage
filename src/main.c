@@ -3,7 +3,7 @@
 
 #define LINE_MAX_LEN 1024
 
-int main(void) {
+static int analyze_stream(FILE *input) {
     char line[LINE_MAX_LEN];
     int listening = 0;
     int broad_ipv4 = 0;
@@ -11,7 +11,7 @@ int main(void) {
     int tcp = 0;
     int udp = 0;
 
-    while (fgets(line, sizeof(line), stdin) != NULL) {
+    while (fgets(line, sizeof(line), input) != NULL) {
         char netid[32];
         char state[32];
         char recvq[32];
@@ -47,4 +47,29 @@ int main(void) {
     printf("broad IPv4 binds: %d\n", broad_ipv4);
     printf("broad IPv6 binds: %d\n", broad_ipv6);
     return 0;
+}
+
+int main(int argc, char **argv) {
+    FILE *input = stdin;
+
+    if (argc > 2) {
+        fprintf(stderr, "usage: socket-state-triage [ss-output-file]\n");
+        return 2;
+    }
+
+    if (argc == 2) {
+        input = fopen(argv[1], "r");
+        if (input == NULL) {
+            perror(argv[1]);
+            return 1;
+        }
+    }
+
+    int result = analyze_stream(input);
+
+    if (input != stdin) {
+        fclose(input);
+    }
+
+    return result;
 }
