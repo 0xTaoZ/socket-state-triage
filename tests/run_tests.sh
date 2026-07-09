@@ -57,3 +57,8 @@ EOF
 
 ./socket-state-triage "$tmp_input" >"$tmp_output"
 grep -q "listening sockets: 1" "$tmp_output"
+
+./socket-state-triage samples/ss-output.txt >"$tmp_output"
+grep -q "listening sockets: 3" "$tmp_output"
+grep -q "broad IPv4 binds: 1" "$tmp_output"
+grep -q "broad IPv6 binds: 1" "$tmp_output"
