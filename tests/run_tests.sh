@@ -38,3 +38,12 @@ EOF
 
 grep -q "tcp sockets: 1" "$tmp_output"
 grep -q "udp sockets: 2" "$tmp_output"
+
+./socket-state-triage <<'EOF' >"$tmp_output"
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      128    0.0.0.0:8080   0.0.0.0:*
+tcp   LISTEN 0      128    [::]:8443      [::]:*
+EOF
+
+grep -q "review: tcp listener on 0.0.0.0:8080" "$tmp_output"
+grep -q "review: tcp listener on \\[::\\]:8443" "$tmp_output"

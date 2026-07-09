@@ -32,9 +32,11 @@ int main(void) {
             listening++;
             if (strncmp(local, "0.0.0.0:", 8) == 0) {
                 broad_ipv4++;
+                printf("review: %s listener on %s\n", netid, local);
             }
             if (strncmp(local, "[::]:", 5) == 0) {
                 broad_ipv6++;
+                printf("review: %s listener on %s\n", netid, local);
             }
         }
     }
