@@ -7,6 +7,7 @@ int main(void) {
     char line[LINE_MAX_LEN];
     int listening = 0;
     int broad_ipv4 = 0;
+    int broad_ipv6 = 0;
 
     while (fgets(line, sizeof(line), stdin) != NULL) {
         char netid[32];
@@ -24,10 +25,14 @@ int main(void) {
             if (strncmp(local, "0.0.0.0:", 8) == 0) {
                 broad_ipv4++;
             }
+            if (strncmp(local, "[::]:", 5) == 0) {
+                broad_ipv6++;
+            }
         }
     }
 
     printf("listening sockets: %d\n", listening);
     printf("broad IPv4 binds: %d\n", broad_ipv4);
+    printf("broad IPv6 binds: %d\n", broad_ipv6);
     return 0;
 }
