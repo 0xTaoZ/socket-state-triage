@@ -28,3 +28,13 @@ tcp   LISTEN 0      128    [::1]:5432      [::]:*
 EOF
 
 grep -q "broad IPv6 binds: 1" "$tmp_output"
+
+./socket-state-triage <<'EOF' >"$tmp_output"
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      128    127.0.0.1:5432   0.0.0.0:*
+udp   UNCONN 0      0      0.0.0.0:5353     0.0.0.0:*
+udp   UNCONN 0      0      127.0.0.53:53    0.0.0.0:*
+EOF
+
+grep -q "tcp sockets: 1" "$tmp_output"
+grep -q "udp sockets: 2" "$tmp_output"

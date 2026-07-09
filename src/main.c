@@ -8,6 +8,8 @@ int main(void) {
     int listening = 0;
     int broad_ipv4 = 0;
     int broad_ipv6 = 0;
+    int tcp = 0;
+    int udp = 0;
 
     while (fgets(line, sizeof(line), stdin) != NULL) {
         char netid[32];
@@ -18,6 +20,12 @@ int main(void) {
 
         if (sscanf(line, "%31s %31s %31s %31s %127s", netid, state, recvq, sendq, local) != 5) {
             continue;
+        }
+
+        if (strcmp(netid, "tcp") == 0) {
+            tcp++;
+        } else if (strcmp(netid, "udp") == 0) {
+            udp++;
         }
 
         if (strcmp(state, "LISTEN") == 0) {
@@ -32,6 +40,8 @@ int main(void) {
     }
 
     printf("listening sockets: %d\n", listening);
+    printf("tcp sockets: %d\n", tcp);
+    printf("udp sockets: %d\n", udp);
     printf("broad IPv4 binds: %d\n", broad_ipv4);
     printf("broad IPv6 binds: %d\n", broad_ipv6);
     return 0;
