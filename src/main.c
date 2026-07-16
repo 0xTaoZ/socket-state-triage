@@ -3,6 +3,14 @@
 
 #define LINE_MAX_LEN 1024
 
+static int is_broad_ipv4_bind(const char *local) {
+    return strncmp(local, "0.0.0.0:", 8) == 0;
+}
+
+static int is_broad_ipv6_bind(const char *local) {
+    return strncmp(local, "[::]:", 5) == 0;
+}
+
 static int analyze_stream(FILE *input) {
     char line[LINE_MAX_LEN];
     int listening = 0;
@@ -30,14 +38,15 @@ static int analyze_stream(FILE *input) {
 
         if (strcmp(state, "LISTEN") == 0) {
             listening++;
-            if (strncmp(local, "0.0.0.0:", 8) == 0) {
-                broad_ipv4++;
-                printf("review: %s listener on %s\n", netid, local);
-            }
-            if (strncmp(local, "[::]:", 5) == 0) {
-                broad_ipv6++;
-                printf("review: %s listener on %s\n", netid, local);
-            }
+        }
+
+        if (is_broad_ipv4_bind(local)) {
+            broad_ipv4++;
+            printf("review: %s broad bind on %s\n", netid, local);
+        }
+        if (is_broad_ipv6_bind(local)) {
+            broad_ipv6++;
+            printf("review: %s broad bind on %s\n", netid, local);
         }
     }
 

@@ -41,12 +41,21 @@ grep -q "udp sockets: 2" "$tmp_output"
 
 ./socket-state-triage <<'EOF' >"$tmp_output"
 Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+udp   UNCONN 0      0      0.0.0.0:5353     0.0.0.0:*
+udp   UNCONN 0      0      127.0.0.53:53    0.0.0.0:*
+EOF
+
+grep -q "review: udp broad bind on 0.0.0.0:5353" "$tmp_output"
+grep -q "broad IPv4 binds: 1" "$tmp_output"
+
+./socket-state-triage <<'EOF' >"$tmp_output"
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
 tcp   LISTEN 0      128    0.0.0.0:8080   0.0.0.0:*
 tcp   LISTEN 0      128    [::]:8443      [::]:*
 EOF
 
-grep -q "review: tcp listener on 0.0.0.0:8080" "$tmp_output"
-grep -q "review: tcp listener on \\[::\\]:8443" "$tmp_output"
+grep -q "review: tcp broad bind on 0.0.0.0:8080" "$tmp_output"
+grep -q "review: tcp broad bind on \\[::\\]:8443" "$tmp_output"
 
 tmp_input="$(mktemp)"
 trap 'rm -f "$tmp_output" "$tmp_input"' EXIT
@@ -60,5 +69,5 @@ grep -q "listening sockets: 1" "$tmp_output"
 
 ./socket-state-triage samples/ss-output.txt >"$tmp_output"
 grep -q "listening sockets: 3" "$tmp_output"
-grep -q "broad IPv4 binds: 1" "$tmp_output"
+grep -q "broad IPv4 binds: 2" "$tmp_output"
 grep -q "broad IPv6 binds: 1" "$tmp_output"
