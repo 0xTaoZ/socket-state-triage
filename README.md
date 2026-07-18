@@ -8,6 +8,7 @@ It reads output shaped like `ss -tuna` and prints:
 - TCP and UDP row counts
 - broad IPv4 binds to `0.0.0.0`
 - broad IPv6 binds to `[::]`
+- broad binds on privileged ports below 1024
 - `review:` lines for broad binds worth checking
 
 This is not a vulnerability scanner. It is a small parsing project for practicing C, Makefiles, tests, and blue-team command-line habits.
@@ -43,6 +44,7 @@ tcp sockets: 3
 udp sockets: 2
 broad IPv4 binds: 2
 broad IPv6 binds: 1
+privileged broad binds: 0
 ```
 
 ## Test

@@ -57,6 +57,17 @@ EOF
 grep -q "review: tcp broad bind on 0.0.0.0:8080" "$tmp_output"
 grep -q "review: tcp broad bind on \\[::\\]:8443" "$tmp_output"
 
+./socket-state-triage <<'EOF' >"$tmp_output"
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      128    0.0.0.0:22     0.0.0.0:*
+tcp   LISTEN 0      128    0.0.0.0:8080   0.0.0.0:*
+udp   UNCONN 0      0      [::]:123        [::]:*
+EOF
+
+grep -q "review: tcp privileged broad bind on 0.0.0.0:22" "$tmp_output"
+grep -q "review: udp privileged broad bind on \\[::\\]:123" "$tmp_output"
+grep -q "privileged broad binds: 2" "$tmp_output"
+
 tmp_input="$(mktemp)"
 trap 'rm -f "$tmp_output" "$tmp_input"' EXIT
 cat >"$tmp_input" <<'EOF'
