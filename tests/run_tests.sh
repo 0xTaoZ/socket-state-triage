@@ -38,6 +38,15 @@ EOF
 
 grep -q "tcp sockets: 1" "$tmp_output"
 grep -q "udp sockets: 2" "$tmp_output"
+grep -q "loopback-only binds: 2" "$tmp_output"
+
+./socket-state-triage <<'EOF' >"$tmp_output"
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      128    [::1]:5432     [::]:*
+tcp   LISTEN 0      128    [::]:8443      [::]:*
+EOF
+
+grep -q "loopback-only binds: 1" "$tmp_output"
 
 ./socket-state-triage <<'EOF' >"$tmp_output"
 Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
@@ -82,3 +91,4 @@ grep -q "listening sockets: 1" "$tmp_output"
 grep -q "listening sockets: 3" "$tmp_output"
 grep -q "broad IPv4 binds: 2" "$tmp_output"
 grep -q "broad IPv6 binds: 1" "$tmp_output"
+grep -q "loopback-only binds: 2" "$tmp_output"

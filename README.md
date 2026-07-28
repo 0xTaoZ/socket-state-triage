@@ -8,6 +8,7 @@ It reads output shaped like `ss -tuna` and prints:
 - TCP and UDP row counts
 - broad IPv4 binds to `0.0.0.0`
 - broad IPv6 binds to `[::]`
+- loopback-only binds to `127.*` or `[::1]`
 - broad binds on privileged ports below 1024
 - `review:` lines for broad binds worth checking
 
@@ -44,6 +45,7 @@ tcp sockets: 3
 udp sockets: 2
 broad IPv4 binds: 2
 broad IPv6 binds: 1
+loopback-only binds: 2
 privileged broad binds: 0
 ```
 

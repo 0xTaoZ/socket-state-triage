@@ -12,6 +12,10 @@ static int is_broad_ipv6_bind(const char *local) {
     return strncmp(local, "[::]:", 5) == 0;
 }
 
+static int is_loopback_bind(const char *local) {
+    return strncmp(local, "127.", 4) == 0 || strncmp(local, "[::1]:", 6) == 0;
+}
+
 static int parse_local_port(const char *local) {
     const char *separator = strrchr(local, ':');
     char *end = NULL;
@@ -34,6 +38,7 @@ static int analyze_stream(FILE *input) {
     int listening = 0;
     int broad_ipv4 = 0;
     int broad_ipv6 = 0;
+    int loopback_only = 0;
     int privileged_broad = 0;
     int tcp = 0;
     int udp = 0;
@@ -70,6 +75,9 @@ static int analyze_stream(FILE *input) {
             broad_ipv6++;
             printf("review: %s broad bind on %s\n", netid, local);
         }
+        if (is_loopback_bind(local)) {
+            loopback_only++;
+        }
         if (is_broad && port >= 0 && port < 1024) {
             privileged_broad++;
             printf("review: %s privileged broad bind on %s\n", netid, local);
@@ -81,6 +89,7 @@ static int analyze_stream(FILE *input) {
     printf("udp sockets: %d\n", udp);
     printf("broad IPv4 binds: %d\n", broad_ipv4);
     printf("broad IPv6 binds: %d\n", broad_ipv6);
+    printf("loopback-only binds: %d\n", loopback_only);
     printf("privileged broad binds: %d\n", privileged_broad);
     return 0;
 }
