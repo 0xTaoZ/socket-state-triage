@@ -36,6 +36,7 @@ static int parse_local_port(const char *local) {
 static int analyze_stream(FILE *input) {
     char line[LINE_MAX_LEN];
     int listening = 0;
+    int established = 0;
     int broad_ipv4 = 0;
     int broad_ipv6 = 0;
     int loopback_only = 0;
@@ -62,6 +63,8 @@ static int analyze_stream(FILE *input) {
 
         if (strcmp(state, "LISTEN") == 0) {
             listening++;
+        } else if (strcmp(state, "ESTAB") == 0) {
+            established++;
         }
 
         int is_broad = is_broad_ipv4_bind(local) || is_broad_ipv6_bind(local);
@@ -85,6 +88,7 @@ static int analyze_stream(FILE *input) {
     }
 
     printf("listening sockets: %d\n", listening);
+    printf("established sockets: %d\n", established);
     printf("tcp sockets: %d\n", tcp);
     printf("udp sockets: %d\n", udp);
     printf("broad IPv4 binds: %d\n", broad_ipv4);

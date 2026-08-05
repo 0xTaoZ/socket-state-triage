@@ -5,6 +5,7 @@ Small C command-line tool for reviewing Linux socket listings during a basic hos
 It reads output shaped like `ss -tuna` and prints:
 
 - total listening sockets
+- established socket rows
 - TCP and UDP row counts
 - broad IPv4 binds to `0.0.0.0`
 - broad IPv6 binds to `[::]`
@@ -41,7 +42,8 @@ review: tcp broad bind on 0.0.0.0:8080
 review: tcp broad bind on [::]:8443
 review: udp broad bind on 0.0.0.0:5353
 listening sockets: 3
-tcp sockets: 3
+established sockets: 1
+tcp sockets: 4
 udp sockets: 2
 broad IPv4 binds: 2
 broad IPv6 binds: 1
