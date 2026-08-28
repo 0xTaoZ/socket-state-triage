@@ -41,6 +41,7 @@ static int analyze_stream(FILE *input) {
     int broad_ipv6 = 0;
     int loopback_only = 0;
     int privileged_broad = 0;
+    int remote_established = 0;
     int tcp = 0;
     int udp = 0;
 
@@ -85,6 +86,10 @@ static int analyze_stream(FILE *input) {
             privileged_broad++;
             printf("review: %s privileged broad bind on %s\n", netid, local);
         }
+        if (strcmp(netid, "tcp") == 0 && strcmp(state, "ESTAB") == 0 && !is_loopback_bind(local)) {
+            remote_established++;
+            printf("review: tcp remote established socket on %s\n", local);
+        }
     }
 
     printf("listening sockets: %d\n", listening);
@@ -95,6 +100,7 @@ static int analyze_stream(FILE *input) {
     printf("broad IPv6 binds: %d\n", broad_ipv6);
     printf("loopback-only binds: %d\n", loopback_only);
     printf("privileged broad binds: %d\n", privileged_broad);
+    printf("remote established sockets: %d\n", remote_established);
     return 0;
 }
 
