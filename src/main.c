@@ -16,6 +16,28 @@ static int is_loopback_bind(const char *local) {
     return strncmp(local, "127.", 4) == 0 || strncmp(local, "[::1]:", 6) == 0;
 }
 
+static int is_non_private_ipv4_peer(const char *peer) {
+    int a;
+    int b;
+    int c;
+    int d;
+    int port;
+
+    if (sscanf(peer, "%d.%d.%d.%d:%d", &a, &b, &c, &d, &port) != 5) {
+        return 0;
+    }
+    if (a < 0 || a > 255 || b < 0 || b > 255 || c < 0 || c > 255 || d < 0 || d > 255 || port < 0 ||
+        port > 65535) {
+        return 0;
+    }
+    if (a == 10 || a == 127 || (a == 172 && b >= 16 && b <= 31) || (a == 192 && b == 168) ||
+        (a == 169 && b == 254)) {
+        return 0;
+    }
+
+    return 1;
+}
+
 static int parse_local_port(const char *local) {
     const char *separator = strrchr(local, ':');
     char *end = NULL;
@@ -42,6 +64,7 @@ static int analyze_stream(FILE *input) {
     int loopback_only = 0;
     int privileged_broad = 0;
     int remote_established = 0;
+    int non_private_peers = 0;
     int tcp = 0;
     int udp = 0;
 
@@ -51,8 +74,12 @@ static int analyze_stream(FILE *input) {
         char recvq[32];
         char sendq[32];
         char local[128];
+        char peer[128];
+        int fields;
 
-        if (sscanf(line, "%31s %31s %31s %31s %127s", netid, state, recvq, sendq, local) != 5) {
+        peer[0] = '\0';
+        fields = sscanf(line, "%31s %31s %31s %31s %127s %127s", netid, state, recvq, sendq, local, peer);
+        if (fields < 5) {
             continue;
         }
 
@@ -90,6 +117,10 @@ static int analyze_stream(FILE *input) {
             remote_established++;
             printf("review: tcp remote established socket on %s\n", local);
         }
+        if (strcmp(netid, "tcp") == 0 && strcmp(state, "ESTAB") == 0 && is_non_private_ipv4_peer(peer)) {
+            non_private_peers++;
+            printf("review: tcp non-private peer on %s\n", peer);
+        }
     }
 
     printf("listening sockets: %d\n", listening);
@@ -101,6 +132,7 @@ static int analyze_stream(FILE *input) {
     printf("loopback-only binds: %d\n", loopback_only);
     printf("privileged broad binds: %d\n", privileged_broad);
     printf("remote established sockets: %d\n", remote_established);
+    printf("non-private established peers: %d\n", non_private_peers);
     return 0;
 }
 

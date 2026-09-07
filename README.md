@@ -12,6 +12,7 @@ It reads output shaped like `ss -tuna` and prints:
 - loopback-only binds to `127.*` or `[::1]`
 - broad binds on privileged ports below 1024
 - established TCP sockets whose local address is not loopback
+- established TCP sockets with a non-private IPv4 peer
 - `review:` lines for socket rows worth checking
 
 This is not a vulnerability scanner. It is a small parsing project for practicing C, Makefiles, tests, and blue-team command-line habits.
@@ -42,16 +43,19 @@ Example output:
 review: tcp broad bind on 0.0.0.0:8080
 review: tcp broad bind on [::]:8443
 review: tcp remote established socket on 10.0.0.5:22
+review: tcp remote established socket on 10.0.0.5:443
+review: tcp non-private peer on 203.0.113.20:52100
 review: udp broad bind on 0.0.0.0:5353
 listening sockets: 3
-established sockets: 1
-tcp sockets: 4
+established sockets: 2
+tcp sockets: 5
 udp sockets: 2
 broad IPv4 binds: 2
 broad IPv6 binds: 1
 loopback-only binds: 2
 privileged broad binds: 0
-remote established sockets: 1
+remote established sockets: 2
+non-private established peers: 1
 ```
 
 ## Test
