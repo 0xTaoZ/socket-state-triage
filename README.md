@@ -37,6 +37,12 @@ Or read a saved sample:
 ./socket-state-triage samples/ss-output.txt
 ```
 
+Limit review lines while keeping full summary counts:
+
+```sh
+./socket-state-triage --limit 5 samples/ss-output.txt
+```
+
 Example output:
 
 ```text

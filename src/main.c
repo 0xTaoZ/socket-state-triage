@@ -4,6 +4,23 @@
 
 #define LINE_MAX_LEN 1024
 
+struct analysis_options {
+    int review_limit;
+};
+
+struct analysis_state {
+    int review_lines;
+};
+
+static void print_review(const struct analysis_options *options, struct analysis_state *state, const char *message,
+                         const char *netid, const char *address) {
+    if (options->review_limit >= 0 && state->review_lines >= options->review_limit) {
+        return;
+    }
+    printf("review: %s %s %s\n", netid, message, address);
+    state->review_lines++;
+}
+
 static int is_broad_ipv4_bind(const char *local) {
     return strncmp(local, "0.0.0.0:", 8) == 0;
 }
@@ -55,8 +72,9 @@ static int parse_local_port(const char *local) {
     return (int)port;
 }
 
-static int analyze_stream(FILE *input) {
+static int analyze_stream(FILE *input, const struct analysis_options *options) {
     char line[LINE_MAX_LEN];
+    struct analysis_state review_state = {0};
     int listening = 0;
     int established = 0;
     int broad_ipv4 = 0;
@@ -100,26 +118,26 @@ static int analyze_stream(FILE *input) {
 
         if (is_broad_ipv4_bind(local)) {
             broad_ipv4++;
-            printf("review: %s broad bind on %s\n", netid, local);
+            print_review(options, &review_state, "broad bind on", netid, local);
         }
         if (is_broad_ipv6_bind(local)) {
             broad_ipv6++;
-            printf("review: %s broad bind on %s\n", netid, local);
+            print_review(options, &review_state, "broad bind on", netid, local);
         }
         if (is_loopback_bind(local)) {
             loopback_only++;
         }
         if (is_broad && port >= 0 && port < 1024) {
             privileged_broad++;
-            printf("review: %s privileged broad bind on %s\n", netid, local);
+            print_review(options, &review_state, "privileged broad bind on", netid, local);
         }
         if (strcmp(netid, "tcp") == 0 && strcmp(state, "ESTAB") == 0 && !is_loopback_bind(local)) {
             remote_established++;
-            printf("review: tcp remote established socket on %s\n", local);
+            print_review(options, &review_state, "remote established socket on", "tcp", local);
         }
         if (strcmp(netid, "tcp") == 0 && strcmp(state, "ESTAB") == 0 && is_non_private_ipv4_peer(peer)) {
             non_private_peers++;
-            printf("review: tcp non-private peer on %s\n", peer);
+            print_review(options, &review_state, "non-private peer on", "tcp", peer);
         }
     }
 
@@ -138,21 +156,41 @@ static int analyze_stream(FILE *input) {
 
 int main(int argc, char **argv) {
     FILE *input = stdin;
+    struct analysis_options options = {-1};
+    const char *path = NULL;
 
-    if (argc > 2) {
-        fprintf(stderr, "usage: socket-state-triage [ss-output-file]\n");
-        return 2;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--limit") == 0) {
+            char *end = NULL;
+            long limit;
+
+            if (i + 1 >= argc) {
+                fprintf(stderr, "usage: socket-state-triage [--limit N] [ss-output-file]\n");
+                return 2;
+            }
+            limit = strtol(argv[++i], &end, 10);
+            if (end == argv[i] || *end != '\0' || limit < 0 || limit > 1000000) {
+                fprintf(stderr, "error: --limit expects a non-negative number\n");
+                return 2;
+            }
+            options.review_limit = (int)limit;
+        } else if (path == NULL) {
+            path = argv[i];
+        } else {
+            fprintf(stderr, "usage: socket-state-triage [--limit N] [ss-output-file]\n");
+            return 2;
+        }
     }
 
-    if (argc == 2) {
-        input = fopen(argv[1], "r");
+    if (path != NULL) {
+        input = fopen(path, "r");
         if (input == NULL) {
-            perror(argv[1]);
+            perror(path);
             return 1;
         }
     }
 
-    int result = analyze_stream(input);
+    int result = analyze_stream(input, &options);
 
     if (input != stdin) {
         fclose(input);

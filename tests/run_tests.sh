@@ -125,3 +125,8 @@ grep -q "loopback-only binds: 2" "$tmp_output"
 grep -q "established sockets: 2" "$tmp_output"
 grep -q "remote established sockets: 2" "$tmp_output"
 grep -q "non-private established peers: 1" "$tmp_output"
+
+./socket-state-triage --limit 2 samples/ss-output.txt >"$tmp_output"
+test "$(grep -c '^review:' "$tmp_output")" -eq 2
+grep -q "remote established sockets: 2" "$tmp_output"
+grep -q "non-private established peers: 1" "$tmp_output"
