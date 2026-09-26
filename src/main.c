@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
             long limit;
 
             if (i + 1 >= argc) {
-                fprintf(stderr, "usage: socket-state-triage [--limit N] [ss-output-file]\n");
+                fprintf(stderr, "usage: socket-state-triage [--limit N | --summary-only] [ss-output-file]\n");
                 return 2;
             }
             limit = strtol(argv[++i], &end, 10);
@@ -174,10 +174,12 @@ int main(int argc, char **argv) {
                 return 2;
             }
             options.review_limit = (int)limit;
+        } else if (strcmp(argv[i], "--summary-only") == 0) {
+            options.review_limit = 0;
         } else if (path == NULL) {
             path = argv[i];
         } else {
-            fprintf(stderr, "usage: socket-state-triage [--limit N] [ss-output-file]\n");
+            fprintf(stderr, "usage: socket-state-triage [--limit N | --summary-only] [ss-output-file]\n");
             return 2;
         }
     }

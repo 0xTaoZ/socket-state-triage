@@ -130,3 +130,8 @@ grep -q "non-private established peers: 1" "$tmp_output"
 test "$(grep -c '^review:' "$tmp_output")" -eq 2
 grep -q "remote established sockets: 2" "$tmp_output"
 grep -q "non-private established peers: 1" "$tmp_output"
+
+./socket-state-triage --summary-only samples/ss-output.txt >"$tmp_output"
+test "$(grep -c '^review:' "$tmp_output" || true)" -eq 0
+grep -q "remote established sockets: 2" "$tmp_output"
+grep -q "non-private established peers: 1" "$tmp_output"

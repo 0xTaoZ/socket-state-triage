@@ -43,6 +43,12 @@ Limit review lines while keeping full summary counts:
 ./socket-state-triage --limit 5 samples/ss-output.txt
 ```
 
+Print only the summary counts:
+
+```sh
+./socket-state-triage --summary-only samples/ss-output.txt
+```
+
 Example output:
 
 ```text
