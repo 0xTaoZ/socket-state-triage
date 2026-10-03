@@ -29,6 +29,10 @@ static int is_broad_ipv6_bind(const char *local) {
     return strncmp(local, "[::]:", 5) == 0;
 }
 
+static int is_wildcard_bind(const char *local) {
+    return strncmp(local, "*:", 2) == 0;
+}
+
 static int is_loopback_bind(const char *local) {
     return strncmp(local, "127.", 4) == 0 || strncmp(local, "[::1]:", 6) == 0;
 }
@@ -79,6 +83,7 @@ static int analyze_stream(FILE *input, const struct analysis_options *options) {
     int established = 0;
     int broad_ipv4 = 0;
     int broad_ipv6 = 0;
+    int wildcard = 0;
     int loopback_only = 0;
     int privileged_broad = 0;
     int remote_established = 0;
@@ -113,7 +118,7 @@ static int analyze_stream(FILE *input, const struct analysis_options *options) {
             established++;
         }
 
-        int is_broad = is_broad_ipv4_bind(local) || is_broad_ipv6_bind(local);
+        int is_broad = is_broad_ipv4_bind(local) || is_broad_ipv6_bind(local) || is_wildcard_bind(local);
         int port = parse_local_port(local);
 
         if (is_broad_ipv4_bind(local)) {
@@ -123,6 +128,10 @@ static int analyze_stream(FILE *input, const struct analysis_options *options) {
         if (is_broad_ipv6_bind(local)) {
             broad_ipv6++;
             print_review(options, &review_state, "broad bind on", netid, local);
+        }
+        if (is_wildcard_bind(local)) {
+            wildcard++;
+            print_review(options, &review_state, "wildcard bind on", netid, local);
         }
         if (is_loopback_bind(local)) {
             loopback_only++;
@@ -147,6 +156,7 @@ static int analyze_stream(FILE *input, const struct analysis_options *options) {
     printf("udp sockets: %d\n", udp);
     printf("broad IPv4 binds: %d\n", broad_ipv4);
     printf("broad IPv6 binds: %d\n", broad_ipv6);
+    printf("wildcard binds: %d\n", wildcard);
     printf("loopback-only binds: %d\n", loopback_only);
     printf("privileged broad binds: %d\n", privileged_broad);
     printf("remote established sockets: %d\n", remote_established);

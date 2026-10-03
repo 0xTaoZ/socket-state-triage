@@ -9,6 +9,7 @@ It reads output shaped like `ss -tuna` and prints:
 - TCP and UDP row counts
 - broad IPv4 binds to `0.0.0.0`
 - broad IPv6 binds to `[::]`
+- wildcard binds shown as `*`
 - loopback-only binds to `127.*` or `[::1]`
 - broad binds on privileged ports below 1024
 - established TCP sockets whose local address is not loopback
@@ -54,16 +55,18 @@ Example output:
 ```text
 review: tcp broad bind on 0.0.0.0:8080
 review: tcp broad bind on [::]:8443
+review: tcp wildcard bind on *:9090
 review: tcp remote established socket on 10.0.0.5:22
 review: tcp remote established socket on 10.0.0.5:443
 review: tcp non-private peer on 203.0.113.20:52100
 review: udp broad bind on 0.0.0.0:5353
-listening sockets: 3
+listening sockets: 4
 established sockets: 2
-tcp sockets: 5
+tcp sockets: 6
 udp sockets: 2
 broad IPv4 binds: 2
 broad IPv6 binds: 1
+wildcard binds: 1
 loopback-only binds: 2
 privileged broad binds: 0
 remote established sockets: 2

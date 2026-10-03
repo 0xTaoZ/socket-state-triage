@@ -106,6 +106,16 @@ grep -q "review: tcp privileged broad bind on 0.0.0.0:22" "$tmp_output"
 grep -q "review: udp privileged broad bind on \\[::\\]:123" "$tmp_output"
 grep -q "privileged broad binds: 2" "$tmp_output"
 
+./socket-state-triage <<'EOF' >"$tmp_output"
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      128    *:22               *:*
+tcp   LISTEN 0      128    *:8080             *:*
+EOF
+
+grep -q "review: tcp wildcard bind on \*:22" "$tmp_output"
+grep -q "wildcard binds: 2" "$tmp_output"
+grep -q "privileged broad binds: 1" "$tmp_output"
+
 tmp_input="$(mktemp)"
 trap 'rm -f "$tmp_output" "$tmp_input"' EXIT
 cat >"$tmp_input" <<'EOF'
@@ -118,9 +128,10 @@ grep -q "listening sockets: 1" "$tmp_output"
 
 ./socket-state-triage samples/ss-output.txt >"$tmp_output"
 grep -q "review: tcp remote established socket on 10.0.0.5:22" "$tmp_output"
-grep -q "listening sockets: 3" "$tmp_output"
+grep -q "listening sockets: 4" "$tmp_output"
 grep -q "broad IPv4 binds: 2" "$tmp_output"
 grep -q "broad IPv6 binds: 1" "$tmp_output"
+grep -q "wildcard binds: 1" "$tmp_output"
 grep -q "loopback-only binds: 2" "$tmp_output"
 grep -q "established sockets: 2" "$tmp_output"
 grep -q "remote established sockets: 2" "$tmp_output"
