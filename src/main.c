@@ -1,3 +1,6 @@
+#define _POSIX_C_SOURCE 200112L
+
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +40,11 @@ static int is_loopback_bind(const char *local) {
     return strncmp(local, "127.", 4) == 0 || strncmp(local, "[::1]:", 6) == 0;
 }
 
+static int is_private_ipv4(int a, int b) {
+    return a == 10 || a == 127 || (a == 172 && b >= 16 && b <= 31) || (a == 192 && b == 168) ||
+           (a == 169 && b == 254);
+}
+
 static int is_non_private_ipv4_peer(const char *peer) {
     int a;
     int b;
@@ -51,9 +59,60 @@ static int is_non_private_ipv4_peer(const char *peer) {
         port > 65535) {
         return 0;
     }
-    if (a == 10 || a == 127 || (a == 172 && b >= 16 && b <= 31) || (a == 192 && b == 168) ||
-        (a == 169 && b == 254)) {
+
+    return !is_private_ipv4(a, b);
+}
+
+/* ss prints IPv6 peers as [address]:port, with an optional %zone. Dual-stack
+ * sockets show IPv4 clients as [::ffff:a.b.c.d]:port, which are judged by
+ * the embedded IPv4 address. */
+static int is_non_private_ipv6_peer(const char *peer) {
+    static const unsigned char mapped_prefix[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+    char text[INET6_ADDRSTRLEN];
+    unsigned char addr[16];
+    const char *close;
+    char *zone;
+    size_t length;
+    int only_last_byte = 1;
+
+    if (peer[0] != '[') {
         return 0;
+    }
+    close = strchr(peer, ']');
+    if (close == NULL || close[1] != ':') {
+        return 0;
+    }
+    length = (size_t)(close - peer - 1);
+    if (length == 0 || length >= sizeof(text)) {
+        return 0;
+    }
+    memcpy(text, peer + 1, length);
+    text[length] = '\0';
+    zone = strchr(text, '%');
+    if (zone != NULL) {
+        *zone = '\0';
+    }
+    if (inet_pton(AF_INET6, text, addr) != 1) {
+        return 0;
+    }
+
+    if (memcmp(addr, mapped_prefix, sizeof(mapped_prefix)) == 0) {
+        return !is_private_ipv4(addr[12], addr[13]);
+    }
+    for (int i = 0; i < 15; i++) {
+        if (addr[i] != 0) {
+            only_last_byte = 0;
+            break;
+        }
+    }
+    if (only_last_byte && addr[15] <= 1) {
+        return 0; /* :: and ::1 */
+    }
+    if ((addr[0] & 0xfe) == 0xfc) {
+        return 0; /* fc00::/7 unique local */
+    }
+    if (addr[0] == 0xfe && (addr[1] & 0xc0) == 0x80) {
+        return 0; /* fe80::/10 link-local */
     }
 
     return 1;
@@ -144,7 +203,8 @@ static int analyze_stream(FILE *input, const struct analysis_options *options) {
             remote_established++;
             print_review(options, &review_state, "remote established socket on", "tcp", local);
         }
-        if (strcmp(netid, "tcp") == 0 && strcmp(state, "ESTAB") == 0 && is_non_private_ipv4_peer(peer)) {
+        if (strcmp(netid, "tcp") == 0 && strcmp(state, "ESTAB") == 0 &&
+            (is_non_private_ipv4_peer(peer) || is_non_private_ipv6_peer(peer))) {
             non_private_peers++;
             print_review(options, &review_state, "non-private peer on", "tcp", peer);
         }

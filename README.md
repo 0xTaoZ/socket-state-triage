@@ -13,7 +13,7 @@ It reads output shaped like `ss -tuna` and prints:
 - loopback-only binds to `127.*` or `[::1]`
 - broad binds on privileged ports below 1024
 - established TCP sockets whose local address is not loopback
-- established TCP sockets with a non-private IPv4 peer
+- established TCP sockets with a non-private IPv4 or IPv6 peer; IPv4-mapped peers such as `[::ffff:203.0.113.20]` are judged by their IPv4 address, and link-local `fe80::/10` and unique-local `fc00::/7` peers are treated as private
 - `review:` lines for socket rows worth checking
 
 This is not a vulnerability scanner. It is a small parsing project for practicing C, Makefiles, tests, and blue-team command-line habits.

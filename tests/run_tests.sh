@@ -146,3 +146,17 @@ grep -q "non-private established peers: 1" "$tmp_output"
 test "$(grep -c '^review:' "$tmp_output" || true)" -eq 0
 grep -q "remote established sockets: 2" "$tmp_output"
 grep -q "non-private established peers: 1" "$tmp_output"
+
+./socket-state-triage <<'EOF' >"$tmp_output"
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   ESTAB  0      0      [2001:db8::5]:443        [2001:db8:1::20]:51000
+tcp   ESTAB  0      0      [::ffff:10.0.0.5]:22     [::ffff:203.0.113.20]:52100
+tcp   ESTAB  0      0      [::ffff:10.0.0.5]:22     [::ffff:192.168.1.7]:52101
+tcp   ESTAB  0      0      [fe80::1%eth0]:22        [fe80::2%eth0]:52102
+tcp   ESTAB  0      0      [fd00::5]:5432           [fd00::9]:41000
+tcp   ESTAB  0      0      [::1]:5432               [::1]:41001
+EOF
+
+grep -q "review: tcp non-private peer on \[2001:db8:1::20\]:51000" "$tmp_output"
+grep -q "review: tcp non-private peer on \[::ffff:203.0.113.20\]:52100" "$tmp_output"
+grep -q "non-private established peers: 2" "$tmp_output"
