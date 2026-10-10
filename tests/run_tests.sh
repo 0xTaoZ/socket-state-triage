@@ -160,3 +160,10 @@ EOF
 grep -q "review: tcp non-private peer on \[2001:db8:1::20\]:51000" "$tmp_output"
 grep -q "review: tcp non-private peer on \[::ffff:203.0.113.20\]:52100" "$tmp_output"
 grep -q "non-private established peers: 2" "$tmp_output"
+
+./socket-state-triage samples/loopback-output.txt >"$tmp_output"
+
+grep -q "loopback-only binds: 3" "$tmp_output"
+grep -q "remote established sockets: 1" "$tmp_output"
+grep -q "non-private established peers: 0" "$tmp_output"
+test "$(grep -c '^review: tcp remote established' "$tmp_output")" -eq 1

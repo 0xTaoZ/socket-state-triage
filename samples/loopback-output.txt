@@ -1,0 +1,5 @@
+Netid State Recv-Q Send-Q Local Address:Port Peer Address:Port
+tcp ESTAB 0 0 [::ffff:127.0.0.1]:5432 [::ffff:127.0.0.2]:41000
+tcp ESTAB 0 0 [::ffff:7f00:2]:5432 [::ffff:7f00:1]:41001
+tcp ESTAB 0 0 [0:0:0:0:0:0:0:1]:5432 [::1]:41003
+tcp ESTAB 0 0 [::ffff:10.0.0.5]:22 [::ffff:10.0.0.9]:41002

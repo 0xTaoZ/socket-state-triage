@@ -10,7 +10,7 @@ It reads output shaped like `ss -tuna` and prints:
 - broad IPv4 binds to `0.0.0.0`
 - broad IPv6 binds to `[::]`
 - wildcard binds shown as `*`
-- loopback-only binds to `127.*` or `[::1]`
+- loopback-only binds to `127.*`, IPv6 loopback, or IPv4-mapped loopback such as `[::ffff:127.0.0.1]` and `[::ffff:7f00:1]`
 - broad binds on privileged ports below 1024
 - established TCP sockets whose local address is not loopback
 - established TCP sockets with a non-private IPv4 or IPv6 peer; IPv4-mapped peers such as `[::ffff:203.0.113.20]` are judged by their IPv4 address, and link-local `fe80::/10` and unique-local `fc00::/7` peers are treated as private
@@ -36,6 +36,14 @@ Or read a saved sample:
 
 ```sh
 ./socket-state-triage samples/ss-output.txt
+```
+
+The loopback sample includes dotted and hexadecimal IPv4-mapped addresses and
+expanded IPv6 loopback. It reports three loopback-only binds and one remote
+established socket:
+
+```sh
+./socket-state-triage samples/loopback-output.txt
 ```
 
 Limit review lines while keeping full summary counts:

@@ -36,10 +36,6 @@ static int is_wildcard_bind(const char *local) {
     return strncmp(local, "*:", 2) == 0;
 }
 
-static int is_loopback_bind(const char *local) {
-    return strncmp(local, "127.", 4) == 0 || strncmp(local, "[::1]:", 6) == 0;
-}
-
 static int is_private_ipv4(int a, int b) {
     return a == 10 || a == 127 || (a == 172 && b >= 16 && b <= 31) || (a == 192 && b == 168) ||
            (a == 169 && b == 254);
@@ -66,33 +62,57 @@ static int is_non_private_ipv4_peer(const char *peer) {
 /* ss prints IPv6 peers as [address]:port, with an optional %zone. Dual-stack
  * sockets show IPv4 clients as [::ffff:a.b.c.d]:port, which are judged by
  * the embedded IPv4 address. */
-static int is_non_private_ipv6_peer(const char *peer) {
-    static const unsigned char mapped_prefix[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+static int parse_ipv6_endpoint(const char *endpoint, unsigned char addr[16]) {
     char text[INET6_ADDRSTRLEN];
-    unsigned char addr[16];
     const char *close;
     char *zone;
     size_t length;
-    int only_last_byte = 1;
 
-    if (peer[0] != '[') {
+    if (endpoint[0] != '[') {
         return 0;
     }
-    close = strchr(peer, ']');
+    close = strchr(endpoint, ']');
     if (close == NULL || close[1] != ':') {
         return 0;
     }
-    length = (size_t)(close - peer - 1);
+    length = (size_t)(close - endpoint - 1);
     if (length == 0 || length >= sizeof(text)) {
         return 0;
     }
-    memcpy(text, peer + 1, length);
+    memcpy(text, endpoint + 1, length);
     text[length] = '\0';
     zone = strchr(text, '%');
     if (zone != NULL) {
         *zone = '\0';
     }
     if (inet_pton(AF_INET6, text, addr) != 1) {
+        return 0;
+    }
+
+    return 1;
+}
+
+static int is_loopback_bind(const char *local) {
+    unsigned char addr[16];
+    static const unsigned char mapped_prefix[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+    static const unsigned char loopback[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+
+    if (strncmp(local, "127.", 4) == 0) {
+        return 1;
+    }
+    if (!parse_ipv6_endpoint(local, addr)) {
+        return 0;
+    }
+    return memcmp(addr, loopback, sizeof(loopback)) == 0 ||
+           (memcmp(addr, mapped_prefix, sizeof(mapped_prefix)) == 0 && addr[12] == 127);
+}
+
+static int is_non_private_ipv6_peer(const char *peer) {
+    static const unsigned char mapped_prefix[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+    unsigned char addr[16];
+    int only_last_byte = 1;
+
+    if (!parse_ipv6_endpoint(peer, addr)) {
         return 0;
     }
 
