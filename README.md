@@ -46,6 +46,15 @@ established socket:
 ./socket-state-triage samples/loopback-output.txt
 ```
 
+Non-private-peer findings require a decimal peer port from 0 through 65535.
+Missing, wildcard, signed, out-of-range, and trailing-text ports do not produce
+peer findings; those rows still contribute to socket totals and local-address
+reviews. This sample reports five established sockets and two non-private peers:
+
+```sh
+./socket-state-triage samples/peer-ports.txt
+```
+
 Limit review lines while keeping full summary counts:
 
 ```sh

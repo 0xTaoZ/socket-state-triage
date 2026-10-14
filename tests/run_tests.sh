@@ -167,3 +167,28 @@ grep -q "loopback-only binds: 3" "$tmp_output"
 grep -q "remote established sockets: 1" "$tmp_output"
 grep -q "non-private established peers: 0" "$tmp_output"
 test "$(grep -c '^review: tcp remote established' "$tmp_output")" -eq 1
+
+# Malformed peer ports must not produce non-private-peer findings.
+for address in 203.0.113.20 '[2001:db8::20]' '[::ffff:203.0.113.20]'; do
+    for port in '' '*' -1 +443 65536 443suffix 999999999999999999999999; do
+        printf 'tcp ESTAB 0 0 10.0.0.5:443 %s:%s\n' "$address" "$port" |
+            ./socket-state-triage >"$tmp_output"
+        grep -qx 'established sockets: 1' "$tmp_output"
+        grep -qx 'non-private established peers: 0' "$tmp_output"
+    done
+    for port in 0 443 65535; do
+        printf 'tcp ESTAB 0 0 10.0.0.5:443 %s:%s\n' "$address" "$port" |
+            ./socket-state-triage >"$tmp_output"
+        grep -qx 'non-private established peers: 1' "$tmp_output"
+    done
+done
+
+./socket-state-triage samples/peer-ports.txt >"$tmp_output"
+grep -qx 'established sockets: 5' "$tmp_output"
+grep -qx 'non-private established peers: 2' "$tmp_output"
+
+./socket-state-triage <<'EOF' >"$tmp_output"
+tcp LISTEN 0 128 0.0.0.0:+22 0.0.0.0:*
+tcp LISTEN 0 128 [::]:22 [::]:*
+EOF
+grep -qx 'privileged broad binds: 1' "$tmp_output"

@@ -1,0 +1,6 @@
+Netid State Recv-Q Send-Q Local Address:Port Peer Address:Port
+tcp ESTAB 0 0 10.0.0.5:443 203.0.113.20:443
+tcp ESTAB 0 0 10.0.0.5:443 [2001:db8::20]:65535
+tcp ESTAB 0 0 10.0.0.5:443 203.0.113.20:443suffix
+tcp ESTAB 0 0 10.0.0.5:443 [2001:db8::20]:65536
+tcp ESTAB 0 0 10.0.0.5:443 [::ffff:203.0.113.20]:*

@@ -41,6 +41,28 @@ static int is_private_ipv4(int a, int b) {
            (a == 169 && b == 254);
 }
 
+static int parse_endpoint_port(const char *endpoint) {
+    const char *separator = strrchr(endpoint, ':');
+    char *end = NULL;
+    long port;
+
+    if (separator == NULL || separator[1] == '\0') {
+        return -1;
+    }
+
+    for (const char *digit = separator + 1; *digit != '\0'; digit++) {
+        if (*digit < '0' || *digit > '9') {
+            return -1;
+        }
+    }
+    port = strtol(separator + 1, &end, 10);
+    if (end == separator + 1 || *end != '\0' || port < 0 || port > 65535) {
+        return -1;
+    }
+
+    return (int)port;
+}
+
 static int is_non_private_ipv4_peer(const char *peer) {
     int a;
     int b;
@@ -48,6 +70,9 @@ static int is_non_private_ipv4_peer(const char *peer) {
     int d;
     int port;
 
+    if (parse_endpoint_port(peer) < 0) {
+        return 0;
+    }
     if (sscanf(peer, "%d.%d.%d.%d:%d", &a, &b, &c, &d, &port) != 5) {
         return 0;
     }
@@ -112,7 +137,7 @@ static int is_non_private_ipv6_peer(const char *peer) {
     unsigned char addr[16];
     int only_last_byte = 1;
 
-    if (!parse_ipv6_endpoint(peer, addr)) {
+    if (parse_endpoint_port(peer) < 0 || !parse_ipv6_endpoint(peer, addr)) {
         return 0;
     }
 
@@ -136,23 +161,6 @@ static int is_non_private_ipv6_peer(const char *peer) {
     }
 
     return 1;
-}
-
-static int parse_local_port(const char *local) {
-    const char *separator = strrchr(local, ':');
-    char *end = NULL;
-    long port;
-
-    if (separator == NULL || separator[1] == '\0') {
-        return -1;
-    }
-
-    port = strtol(separator + 1, &end, 10);
-    if (end == separator + 1 || *end != '\0' || port < 0 || port > 65535) {
-        return -1;
-    }
-
-    return (int)port;
 }
 
 static int analyze_stream(FILE *input, const struct analysis_options *options) {
@@ -198,7 +206,7 @@ static int analyze_stream(FILE *input, const struct analysis_options *options) {
         }
 
         int is_broad = is_broad_ipv4_bind(local) || is_broad_ipv6_bind(local) || is_wildcard_bind(local);
-        int port = parse_local_port(local);
+        int port = parse_endpoint_port(local);
 
         if (is_broad_ipv4_bind(local)) {
             broad_ipv4++;
